@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { ConflictException, Injectable, InternalServerErrorException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from './entities/user.entity';
@@ -18,13 +18,27 @@ export class UserService {
     return this.userRepository.findOneBy({ id });
   }
 
-  create(user: User): Promise<User> {
-    return this.userRepository.save(user);
+  async create(user: User): Promise<User> {
+    try {
+      return await this.userRepository.save(user);
+    } catch (error) {
+      if (error.code === 'ER_DUP_ENTRY') {
+        throw new ConflictException('Email already exists');
+      }
+      throw new InternalServerErrorException('Something went wrong');
+    }
   }
 
   async update(id: number, user: User): Promise<User> {
-    await this.userRepository.update(id, user);
-    return this.userRepository.findOneBy({ id });
+    try {
+      await this.userRepository.update(id, user);
+      return this.userRepository.findOneBy({ id });
+    } catch (error) {
+      if (error.code === 'ER_DUP_ENTRY') {
+        throw new ConflictException('Email already exists');
+      }
+      throw error;
+    }
   }
 
   async remove(id: number): Promise<void> {
