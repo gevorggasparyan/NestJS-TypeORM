@@ -5,8 +5,8 @@ export const typeOrmConfig = {
   inject: [ConfigService],
   useFactory: (configService: ConfigService): TypeOrmModuleOptions => ({
     type: 'mysql',
-    host: 'localhost',
-    port: 3306,
+    host: configService.get<string>('DB_HOST'),
+    port: configService.get<number>('DB_PORT'),
     username: configService.get<string>('DB_USERNAME'),
     password: configService.get<string>('DB_PASSWORD'),
     database: configService.get<string>('DB_NAME'),
